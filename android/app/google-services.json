@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1025963208289",
+    "firebase_url": "https://fir-quiz-app-1249f.firebaseio.com",
+    "project_id": "fir-quiz-app-1249f",
+    "storage_bucket": "fir-quiz-app-1249f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1025963208289:android:d0913327da3e811e698420",
+        "android_client_info": {
+          "package_name": "yuvrajsingh.demoquiz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1025963208289-1pnvsg5qkrgmc5u3m67taf883hb07vs1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBR5ZIDHyRXbqcKYCXYlUynA98AuOpMErw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1025963208289-1pnvsg5qkrgmc5u3m67taf883hb07vs1.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1025963208289-nnrknja60fjbq460j0o9troddq63lneo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "yuvrajsingh.demoquiz"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
