@@ -36,6 +36,8 @@ dependencies:
   animated_text_kit: ^2.2.0
   timer_count_down: ^1.0.4
   shimmer: ^1.1.1
+  youtube_player_flutter: ^7.0.0+7
+
 
 
 

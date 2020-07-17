@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:demoquiz/rear.dart';
+import 'package:demoquiz/data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +9,7 @@ class Shot extends StatefulWidget {
 }
 
 class _ShotState extends State<Shot> {
+
   dynamic videoLink;
   dynamic imageLink;
   dynamic currentIndex = 0;
@@ -21,6 +22,7 @@ class _ShotState extends State<Shot> {
   dynamic totalScore = 0;
 //  void initState() {
 //    super.initState();
+//    yuviState.initState();
 //    getScore();
 //    getQuestion();
 //    getQuestionType();
@@ -50,7 +52,7 @@ class _ShotState extends State<Shot> {
         .document('rFZFFNX1S2BxPMuOI1vM')
         .get()
         .then((value) =>
-            setState((){imageLink = value.data['questions'][currentIndex]['image'];}));
+            imageLink = value.data['questions'][currentIndex]['image']);
     print(imageLink);
     if (imageLink == null) {
       return Expanded(
@@ -88,7 +90,7 @@ class _ShotState extends State<Shot> {
         .document('rFZFFNX1S2BxPMuOI1vM')
         .get()
         .then((value) =>
-            setState((){question = value.data['questions'][currentIndex]['question'];}));
+            question = value.data['questions'][currentIndex]['question']);
     print(question);
     if (question == null) {
       return Row();
@@ -118,7 +120,7 @@ class _ShotState extends State<Shot> {
         .document('rFZFFNX1S2BxPMuOI1vM')
         .get()
         .then((value) =>
-            setState((){answers = value.data['questions'][currentIndex]['answers'];}));
+            answers = value.data['questions'][currentIndex]['answers']);
     print(answers);
   }
 
@@ -343,8 +345,8 @@ class _ShotState extends State<Shot> {
         .collection("quetions")
         .document('rFZFFNX1S2BxPMuOI1vM')
         .get()
-        .then((value) => setState((){questionType =
-            value.data['questions'][currentIndex]['question_type'];}));
+        .then((value) => questionType =
+            value.data['questions'][currentIndex]['question_type']);
     print(questionType);
     getAnswers();
     getCorrectAnswer();
@@ -384,7 +386,7 @@ class _ShotState extends State<Shot> {
         .document('rFZFFNX1S2BxPMuOI1vM')
         .get()
         .then((value) =>
-            setState((){correctAnswer = value.data['questions'][currentIndex]['correct_answer'].toString();}));
+            correctAnswer = value.data['questions'][currentIndex]['correct_answer'].toString());
     print(correctAnswer);
   }
 
@@ -395,7 +397,7 @@ class _ShotState extends State<Shot> {
         .document('rFZFFNX1S2BxPMuOI1vM')
         .get()
         .then(
-            (value) => setState((){score = value.data['questions'][currentIndex]['score'];}));
+            (value) => score = value.data['questions'][currentIndex]['score']);
     print(score);
     if (score == null) {
       return Container();
@@ -530,6 +532,7 @@ class _ShotState extends State<Shot> {
     );
   }
 }
+
 
 class ListViewCard extends StatefulWidget {
   final int index;

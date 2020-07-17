@@ -410,11 +410,11 @@ class _YuviState extends State<Yuvi> {
     }
   }
 
-  checkAnswer() {
-    if (userPicked.toString() == correctAnswers[currentIndex].toString()) {
-      totalScore += scores[currentIndex];
-    }
-  }
+//  checkAnswer() {
+//    if (userPicked.toString() == correctAnswers[currentIndex].toString()) {
+//      totalScore += scores[currentIndex];
+//    }
+//  }
 
   sco(){
     return Center(
