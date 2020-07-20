@@ -1,6 +1,10 @@
+import 'package:circular_countdown/circular_countdown.dart';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:demoquiz/youtube.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'timer.dart';
 
 class Yuvi extends StatefulWidget {
   @override
@@ -135,7 +139,17 @@ class _YuviState extends State<Yuvi> {
         child: Center(
           child: Container(
             child: Center(
-              child: Image.network(imageBank[currentIndex].toString()),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Youtube()),
+                    );
+                  });
+                },
+                child: Image.network(imageBank[currentIndex].toString()),
+              ),
             ),
           ),
         ),
@@ -469,6 +483,25 @@ class _YuviState extends State<Yuvi> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
+                          TimeCircularCountdown(
+                            countdownTotalColor: Colors.red.shade400,
+                            countdownRemainingColor: Colors.white,
+                            repeat: true,
+                            unit: CountdownUnit.second,
+                            strokeWidth: 10.0,
+                            countdownTotal: 5,
+                            diameter: 100,
+                            countdownCurrentColor: Colors.redAccent.shade700,
+                            onFinished: () {
+                              setState(() {
+                                currentIndex = 1;
+                              });
+                            },
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 50,
+                            ),
+                          ),
                           sco(),
 //                          submit(),
 //                          getScore(),

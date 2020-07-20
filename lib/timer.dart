@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:timer_count_down/timer_count_down.dart';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import  'package:circular_countdown/circular_countdown.dart';
+
 
 class Timer extends StatefulWidget {
   @override
@@ -16,22 +18,19 @@ class _TimerState extends State<Timer> {
       ),
       body: Container(
         child: Center(
-          child: CircularCountDownTimer(
-            duration: 30,
-            width: MediaQuery.of(context).size.width/2,
-            height: MediaQuery.of(context).size.height/2,
-            color: Colors.white,
-            fillColor: Colors.red,
-            strokeWidth: 5.0,
-            textStyle: TextStyle(
-              fontSize: 22.0,
-              color: Colors.black87,
-              fontWeight: FontWeight.bold
-            ),
-            isReverse: true,
-            onComplete: (){
-              print('countdown ended');
+          child: TimeCircularCountdown(
+            repeat: true,
+            unit: CountdownUnit.second,
+            countdownTotal: 5,
+            diameter: 100,
+            countdownCurrentColor: Colors.amber,
+            onFinished: () {
+              setState(() {});
             },
+            textStyle: const TextStyle(
+              color: Colors.white,
+              fontSize: 50,
+            ),
           ),
         ),
       ),
