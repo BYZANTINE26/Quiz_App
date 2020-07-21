@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:demoquiz/data.dart';
 import 'package:demoquiz/home.dart';
 import 'package:demoquiz/rear.dart';

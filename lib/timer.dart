@@ -18,19 +18,9 @@ class _TimerState extends State<Timer> {
       ),
       body: Container(
         child: Center(
-          child: TimeCircularCountdown(
-            repeat: true,
-            unit: CountdownUnit.second,
-            countdownTotal: 5,
-            diameter: 100,
-            countdownCurrentColor: Colors.amber,
-            onFinished: () {
-              setState(() {});
-            },
-            textStyle: const TextStyle(
-              color: Colors.white,
-              fontSize: 50,
-            ),
+          child: CircularCountdown(
+            countdownTotal: 10,
+            countdownRemaining: 5,
           ),
         ),
       ),

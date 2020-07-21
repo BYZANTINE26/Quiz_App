@@ -1,10 +1,15 @@
-import 'package:circular_countdown/circular_countdown.dart';
-import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+import 'package:flutter/services.dart';
+
+//import 'package:circular_countdown/circular_countdown.dart';
+//import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demoquiz/youtube.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'timer.dart';
+//import 'timer.dart';
 
 class Yuvi extends StatefulWidget {
   @override
@@ -119,12 +124,39 @@ class _YuviState extends State<Yuvi> {
 
   @override
   void initState() {
+    startTimer();
     getImage();
     getType();
     getQuestions();
     getOptions();
     getCorrectAnswer();
     super.initState();
+  }
+
+  static int timer = 10;
+  bool cancelTimer = false;
+  String showTimer = timer.toString();
+  void startTimer() async {
+    const oneSec = Duration(seconds: 1);
+    Timer.periodic(oneSec, (Timer t) {
+      setState(() {
+        if (timer < 1) {
+          t.cancel();
+          currentIndex = 1;
+        } else if (cancelTimer == true) {
+          t.cancel();
+        } else {
+          timer = timer - 1;
+        }
+        showTimer = timer.toString();
+      });
+    });
+  }
+
+  re(){
+    timer = 10;
+    cancelTimer = false;
+    startTimer();
   }
 
   ima() {
@@ -197,6 +229,8 @@ class _YuviState extends State<Yuvi> {
             onPressed: () {
               setState(() {
                 currentIndex++;
+                cancelTimer = true;
+                re();
 //                print(currentIndex);
 //                userPicked = true;
 //                checkAnswer();
@@ -483,25 +517,7 @@ class _YuviState extends State<Yuvi> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
-                          TimeCircularCountdown(
-                            countdownTotalColor: Colors.red.shade400,
-                            countdownRemainingColor: Colors.white,
-                            repeat: true,
-                            unit: CountdownUnit.second,
-                            strokeWidth: 10.0,
-                            countdownTotal: 5,
-                            diameter: 100,
-                            countdownCurrentColor: Colors.redAccent.shade700,
-                            onFinished: () {
-                              setState(() {
-                                currentIndex = 1;
-                              });
-                            },
-                            textStyle: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 50,
-                            ),
-                          ),
+                          Text(showTimer),
                           sco(),
 //                          submit(),
 //                          getScore(),
