@@ -25,7 +25,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'DemoQuiz',
       theme: ThemeData.dark(),
-      home: Yuvi(),
+      home: HomePage(),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'dart:developer';
+import 'package:demoquiz/data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -13,6 +14,7 @@ class Youtube extends StatefulWidget {
 }
 
 class _YoutubeState extends State<Youtube> {
+  @override
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   YoutubePlayerController _controller;
   TextEditingController _idController;
@@ -37,7 +39,7 @@ class _YoutubeState extends State<Youtube> {
         mute: false,
         autoPlay: true,
         disableDragSeek: false,
-        loop: false,
+        loop: true,
         isLive: false,
         forceHD: false,
         enableCaption: true,
@@ -77,6 +79,7 @@ class _YoutubeState extends State<Youtube> {
 
   @override
   Widget build(BuildContext context) {
+//    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.portraitUp]);
     return Container(
       child: YoutubePlayerBuilder(
         onExitFullScreen: (){

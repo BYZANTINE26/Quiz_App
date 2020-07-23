@@ -135,6 +135,7 @@ class _YuviState extends State<Yuvi> {
 
   static int timer = 10;
   bool cancelTimer = false;
+  bool pauseTimer = false;
   String showTimer = timer.toString();
   void startTimer() async {
     const oneSec = Duration(seconds: 1);
@@ -143,8 +144,13 @@ class _YuviState extends State<Yuvi> {
         if (timer < 1) {
           t.cancel();
           currentIndex = 1;
-        } else if (cancelTimer == true) {
+          re();
+        } else if (pauseTimer == true){
           t.cancel();
+//          startTimer();
+        }else if (cancelTimer == true) {
+          t.cancel();
+          re();
         } else {
           timer = timer - 1;
         }
@@ -173,12 +179,10 @@ class _YuviState extends State<Yuvi> {
             child: Center(
               child: GestureDetector(
                 onTap: () {
-                  setState(() {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Youtube()),
-                    );
-                  });
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Youtube()),
+                  );
                 },
                 child: Image.network(imageBank[currentIndex].toString()),
               ),
@@ -228,9 +232,10 @@ class _YuviState extends State<Yuvi> {
             elevation: 5.0,
             onPressed: () {
               setState(() {
+                totalScore = 10;
                 currentIndex++;
                 cancelTimer = true;
-                re();
+//                re();
 //                print(currentIndex);
 //                userPicked = true;
 //                checkAnswer();
@@ -464,6 +469,40 @@ class _YuviState extends State<Yuvi> {
 //    }
 //  }
 
+  submit(){
+    if (typeBank[currentIndex] == "MCQ"){
+      return ButtonTheme(
+        minWidth: 120.0,
+        height: 25.0,
+        child: RaisedButton(
+          padding: EdgeInsets.all(10.0),
+          color: Colors.grey.shade800,
+          splashColor: Colors.blueGrey,
+          highlightColor: Colors.grey.shade600,
+          elevation: 10.0,
+          onPressed: () {
+            setState(() {
+//              currentIndex += 1;
+//                print(currentIndex);
+//              userPicked = answers;
+//              checkOrder();
+            });
+          },
+          child: Text(
+            'Submit',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 30.0,
+                fontWeight: FontWeight.bold
+            ),
+          ),
+        ),
+      );
+    } else {
+      return Container();
+    }
+  }
+
   sco(){
     return Center(
       child: Card(
@@ -517,7 +556,10 @@ class _YuviState extends State<Yuvi> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
-                          Text(showTimer),
+                          Text(
+                              showTimer,
+                            style: TextStyle(fontSize: 25.0),
+                          ),
                           sco(),
 //                          submit(),
 //                          getScore(),

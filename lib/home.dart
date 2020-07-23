@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:demoquiz/data.dart';
 import 'package:demoquiz/shot.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
@@ -71,7 +72,7 @@ class _HomePageState extends State<HomePage> {
                           setState(() {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => Shot()),
+                              MaterialPageRoute(builder: (context) => Yuvi()),
                             );
                           });
                             },
