@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:demoquiz/data.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -25,6 +26,22 @@ class _YoutubeState extends State<Youtube> {
   double _volume = 100;
   bool _muted = false;
   bool _isPlayerReady = false;
+
+  void getVideo() async {
+    String videoLink;
+    for (int i = 0; i < 3; i++) {
+      await Firestore.instance
+          .collection("quetions")
+          .document('rFZFFNX1S2BxPMuOI1vM')
+          .get()
+          .then((value) => setState(() {
+        videoLink = value.data['questions'][i]['video'];
+      }));
+      print(videoLink);
+      _ids.add(videoLink);
+      print(_ids);
+    }
+  }
 
   final List<String> _ids = [
     'A-QgGXbDyR0'

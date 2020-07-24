@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/services.dart';
 
 //import 'package:circular_countdown/circular_countdown.dart';
@@ -130,6 +131,7 @@ class _YuviState extends State<Yuvi> {
     getQuestions();
     getOptions();
     getCorrectAnswer();
+    getScore();
     super.initState();
   }
 
@@ -147,7 +149,7 @@ class _YuviState extends State<Yuvi> {
           re();
         } else if (pauseTimer == true){
           t.cancel();
-//          startTimer();
+          startTimer();
         }else if (cancelTimer == true) {
           t.cancel();
           re();
@@ -179,10 +181,13 @@ class _YuviState extends State<Yuvi> {
             child: Center(
               child: GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Youtube()),
-                  );
+                  setState((){
+                    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Youtube()),
+                    );
+                  });
                 },
                 child: Image.network(imageBank[currentIndex].toString()),
               ),
@@ -215,6 +220,63 @@ class _YuviState extends State<Yuvi> {
     }
   }
 
+  bool ans;
+  dialog(){
+    if (ans == true) {
+      return AwesomeDialog(
+        context: context,
+        animType: AnimType.LEFTSLIDE,
+        headerAnimationLoop: false,
+        dialogType: DialogType.SUCCES,
+        title: 'CORRECT ANSWER',
+//          desc:
+//          'Dialog description here..................................................',
+        btnOkOnPress: () {
+          cancelTimer = true;
+          currentIndex = 1;
+        },
+        btnOkText: 'NEXT QUESTION',
+        btnOkIcon: Icons.check_circle,
+//          onDissmissCallback: () {
+//            debugPrint('Dialog Dissmiss from callback');
+//          },
+      )
+        ..show();
+    } else if (ans == false) {
+      return AwesomeDialog(
+          context: context,
+          dialogType: DialogType.ERROR,
+          animType: AnimType.RIGHSLIDE,
+          headerAnimationLoop: true,
+          title: 'WRONG ANSWER',
+//          desc:
+//          'Dialog description here..................................................',
+          btnOkOnPress: () {
+            cancelTimer = true;
+            currentIndex = 1;
+          },
+          btnOkText: 'NEXT QUESTION',
+          btnOkIcon: Icons.cancel,
+          btnOkColor: Colors.red)
+        ..show();
+    } else {
+      return Container();
+    }
+  }
+
+  dynamic userPicked;
+  checkAnswer() {
+    if (userPicked == correctAnswers[currentIndex]) {
+      totalScore += scores[currentIndex];
+//      currentIndex = 1;
+      ans = true;
+//      return dialog();
+    } else {
+      ans = false;
+//      return dialog();
+    }
+  }
+
   trueFalse() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -232,9 +294,9 @@ class _YuviState extends State<Yuvi> {
             elevation: 5.0,
             onPressed: () {
               setState(() {
-                totalScore = 10;
-                currentIndex++;
                 cancelTimer = true;
+                userPicked = true;
+                checkAnswer();
 //                re();
 //                print(currentIndex);
 //                userPicked = true;
@@ -463,12 +525,6 @@ class _YuviState extends State<Yuvi> {
     }
   }
 
-//  checkAnswer() {
-//    if (userPicked.toString() == correctAnswers[currentIndex].toString()) {
-//      totalScore += scores[currentIndex];
-//    }
-//  }
-
   submit(){
     if (typeBank[currentIndex] == "MCQ"){
       return ButtonTheme(
@@ -529,6 +585,7 @@ class _YuviState extends State<Yuvi> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
