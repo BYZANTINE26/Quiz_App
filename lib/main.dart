@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:demoquiz/data.dart';
 import 'package:demoquiz/home.dart';
+import 'package:demoquiz/poll.dart';
 import 'package:demoquiz/rear.dart';
 import 'package:demoquiz/timer.dart';
 import 'package:demoquiz/youtube.dart';

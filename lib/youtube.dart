@@ -6,10 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-import 'video_list.dart';
-
 
 class Youtube extends StatefulWidget {
+  final String link;
+  Youtube({this.link});
+
   @override
   _YoutubeState createState() => _YoutubeState();
 }
@@ -27,28 +28,12 @@ class _YoutubeState extends State<Youtube> {
   bool _muted = false;
   bool _isPlayerReady = false;
 
-  void getVideo() async {
-    String videoLink;
-    for (int i = 0; i < 3; i++) {
-      await Firestore.instance
-          .collection("quetions")
-          .document('rFZFFNX1S2BxPMuOI1vM')
-          .get()
-          .then((value) => setState(() {
-        videoLink = value.data['questions'][i]['video'];
-      }));
-      print(videoLink);
-      _ids.add(videoLink);
-      print(_ids);
-    }
-  }
+  List<String> _ids = [];
 
-  final List<String> _ids = [
-    'A-QgGXbDyR0'
-  ];
 
   @override
   void initState() {
+    _ids.add(widget.link);
     super.initState();
     _controller = YoutubePlayerController(
       initialVideoId: _ids.first,
@@ -90,13 +75,14 @@ class _YoutubeState extends State<Youtube> {
     _idController.dispose();
     _seekToController.dispose();
     super.dispose();
+    _ids = [];
   }
 
 
 
   @override
   Widget build(BuildContext context) {
-//    SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.portraitUp]);
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
     return Container(
       child: YoutubePlayerBuilder(
         onExitFullScreen: (){

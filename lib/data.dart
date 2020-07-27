@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:demoquiz/youtube.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:polls/polls.dart';
 //import 'timer.dart';
 
 class Yuvi extends StatefulWidget {
@@ -20,6 +21,7 @@ class Yuvi extends StatefulWidget {
 class _YuviState extends State<Yuvi> {
   int currentIndex = 0;
   int totalScore = 0;
+  int outOf = 0;
 
   List<String> imageBank = [];
   void getImage() async {
@@ -35,6 +37,23 @@ class _YuviState extends State<Yuvi> {
       print(imageLink);
       imageBank.add(imageLink);
       print(imageBank);
+    }
+  }
+
+  List<String> videoBank = [];
+  void getVideo() async {
+    String videoLink;
+    for (int i = 0; i < 3; i++) {
+      await Firestore.instance
+          .collection("quetions")
+          .document('rFZFFNX1S2BxPMuOI1vM')
+          .get()
+          .then((value) => setState(() {
+        videoLink = value.data['questions'][i]['video'].toString();
+      }));
+      print(videoLink);
+      videoBank.add(videoLink);
+      print(videoBank);
     }
   }
 
@@ -89,6 +108,24 @@ class _YuviState extends State<Yuvi> {
     }
   }
 
+  List pollValues = [];
+  void getPoll() async {
+    dynamic po;
+    for (int i = 0; i < 3; i++) {
+      await Firestore.instance
+          .collection("quetions")
+          .document('rFZFFNX1S2BxPMuOI1vM')
+          .get()
+          .then((value) => setState(() {
+        po = value.data['questions'][i]['poll_values'];
+      }));
+      print(po);
+      pollValues.add(po);
+      print(pollValues);
+    }
+  }
+
+
   List correctAnswers = [];
   void getCorrectAnswer() async {
     dynamic correctAnswer;
@@ -127,9 +164,11 @@ class _YuviState extends State<Yuvi> {
   void initState() {
     startTimer();
     getImage();
+    getVideo();
     getType();
     getQuestions();
     getOptions();
+    getPoll();
     getCorrectAnswer();
     getScore();
     super.initState();
@@ -144,12 +183,14 @@ class _YuviState extends State<Yuvi> {
     Timer.periodic(oneSec, (Timer t) {
       setState(() {
         if (timer < 1) {
+          print('timer ended');
           t.cancel();
           currentIndex = 1;
           re();
         } else if (pauseTimer == true){
           t.cancel();
-          startTimer();
+          print('timer paused');
+          pauseTimer = false;
         }else if (cancelTimer == true) {
           t.cancel();
           re();
@@ -176,22 +217,20 @@ class _YuviState extends State<Yuvi> {
     } else {
       return Expanded(
         flex: 1,
-        child: Center(
-          child: Container(
-            child: Center(
-              child: GestureDetector(
-                onTap: () {
-                  setState((){
-                    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Youtube()),
-                    );
-                  });
-                },
-                child: Image.network(imageBank[currentIndex].toString()),
-              ),
-            ),
+        child: Container(
+          child: GestureDetector(
+            onTap: () {
+              setState((){
+                pauseTimer = true;
+//                    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Youtube(link: videoBank[currentIndex].toString(),),),
+                );
+                startTimer();
+              });
+            },
+            child: Image.network(imageBank[currentIndex], fit: BoxFit.fill,),
           ),
         ),
       );
@@ -226,20 +265,19 @@ class _YuviState extends State<Yuvi> {
       return AwesomeDialog(
         context: context,
         animType: AnimType.LEFTSLIDE,
-        headerAnimationLoop: false,
+        headerAnimationLoop: true,
         dialogType: DialogType.SUCCES,
         title: 'CORRECT ANSWER',
-//          desc:
-//          'Dialog description here..................................................',
+          desc: 'SCORE:  $totalScore / $outOf',
         btnOkOnPress: () {
-          cancelTimer = true;
-          currentIndex = 1;
+          setState(() {
+            currentIndex = 1;
+            re();
+            cancelTimer = true;
+          });
         },
         btnOkText: 'NEXT QUESTION',
         btnOkIcon: Icons.check_circle,
-//          onDissmissCallback: () {
-//            debugPrint('Dialog Dissmiss from callback');
-//          },
       )
         ..show();
     } else if (ans == false) {
@@ -249,11 +287,11 @@ class _YuviState extends State<Yuvi> {
           animType: AnimType.RIGHSLIDE,
           headerAnimationLoop: true,
           title: 'WRONG ANSWER',
-//          desc:
-//          'Dialog description here..................................................',
+          desc: 'SCORE:  $totalScore / $outOf',
           btnOkOnPress: () {
-            cancelTimer = true;
             currentIndex = 1;
+            re();
+            cancelTimer = true;
           },
           btnOkText: 'NEXT QUESTION',
           btnOkIcon: Icons.cancel,
@@ -264,16 +302,16 @@ class _YuviState extends State<Yuvi> {
     }
   }
 
-  dynamic userPicked;
-  checkAnswer() {
+  checkAnswer(dynamic userPicked) {
+    pauseTimer = true;
+    outOf += scores[currentIndex];
     if (userPicked == correctAnswers[currentIndex]) {
       totalScore += scores[currentIndex];
-//      currentIndex = 1;
       ans = true;
-//      return dialog();
+      return dialog();
     } else {
       ans = false;
-//      return dialog();
+      return dialog();
     }
   }
 
@@ -294,13 +332,7 @@ class _YuviState extends State<Yuvi> {
             elevation: 5.0,
             onPressed: () {
               setState(() {
-                cancelTimer = true;
-                userPicked = true;
-                checkAnswer();
-//                re();
-//                print(currentIndex);
-//                userPicked = true;
-//                checkAnswer();
+                checkAnswer(true);
               });
             },
             child: Text(
@@ -324,11 +356,7 @@ class _YuviState extends State<Yuvi> {
             elevation: 5.0,
             onPressed: () {
               setState(() {
-                currentIndex++;
-//                userPicked = false;
-//                checkAnswer();
-//                getD();
-//                                currentIndex += 1;
+                checkAnswer(false);
               });
             },
             child: Text(
@@ -495,19 +523,86 @@ class _YuviState extends State<Yuvi> {
     }
   }
 
+  delay() {
+    Timer(Duration(seconds: 3), () {
+      setState(() {
+        currentIndex = 1;
+        //TODO: timer
+      });
+    });
+  }
+
+  String user = "";
+  Map usersWhoVoted = {};
+  String creator = "yuvraj";
+  poll() {
+    setState(() {
+      pauseTimer = true;
+    });
+    if (optionsBank[currentIndex] == null) {
+      return Container();
+    } else {
+      return Polls(
+        children: [
+          Polls.options(title: optionsBank[currentIndex][0].toString(), value: pollValues[currentIndex][0].toDouble()),
+          Polls.options(title: optionsBank[currentIndex][1].toString(), value: pollValues[currentIndex][1].toDouble()),
+          Polls.options(title: optionsBank[currentIndex][2].toString(), value: pollValues[currentIndex][2].toDouble()),
+          Polls.options(title: optionsBank[currentIndex][3].toString(), value: pollValues[currentIndex][3].toDouble()),
+        ],
+        question: Text('options', style: TextStyle(color: Colors.transparent),),
+        currentUser: this.user,
+        creatorID: this.creator,
+        voteData: usersWhoVoted,
+        userChoice: usersWhoVoted[this.user],
+        onVoteBackgroundColor: Colors.blue,
+        leadingBackgroundColor: Colors.blue,
+        backgroundColor: Colors.red,
+        onVote: (choice) {
+          ans = true;
+          print(choice);
+          setState(() {
+            this.usersWhoVoted[this.user] = choice;
+            print(usersWhoVoted);
+            delay();
+          });
+          if (choice == 1) {
+            setState(() {
+              pollValues[currentIndex][0] += 1;
+            });
+          }else if (choice == 2) {
+            setState(() {
+              pollValues[currentIndex][1] += 1;
+            });
+          }else if (choice == 3) {
+            setState(() {
+              pollValues[currentIndex][2] += 1;
+            });
+          }else if (choice == 4) {
+            setState(() {
+              pollValues[currentIndex][3] += 1;
+           });
+          }
+        },
+      );
+    }
+  }
+
   opt() {
     if (typeBank[currentIndex] == "True/False") {
       return Expanded(
         flex: 1,
         child: Center(
-          child: trueFalse(),
+          child: poll(),
         ),
       );
     } else if (typeBank[currentIndex] == "MCQ") {
       return Expanded(
         flex: 1,
         child: Center(
-          child: rear(),
+          child: Padding(
+            padding: EdgeInsets.all(10.0),
+            child: mcq(),
+          ),
         ),
       );
     } else if (typeBank[currentIndex] == "Re-arrange") {
@@ -517,10 +612,19 @@ class _YuviState extends State<Yuvi> {
           child: Container(),
         ),
       );
+    } else if (typeBank[currentIndex] == "Poll"){
+      return Expanded(
+        flex: 1,
+        child: Center(
+          child: poll(),
+        ),
+      );
     } else {
       return Expanded(
         flex: 1,
-        child: Container(),
+        child: Center(
+          child: Container(),
+        ),
       );
     }
   }
@@ -559,6 +663,19 @@ class _YuviState extends State<Yuvi> {
     }
   }
 
+  sh(){
+    if (typeBank[currentIndex] == "True/False"){
+      return Container();
+    } else {
+      return Container(
+        child: Text(
+          showTimer,
+          style: TextStyle(fontSize: 25.0),
+        ),
+      );
+    }
+  }
+
   sco(){
     return Center(
       child: Card(
@@ -570,7 +687,7 @@ class _YuviState extends State<Yuvi> {
             height: 25.0,
             child: Center(
               child: Text(
-                'Score:  ' + '$totalScore',
+                'Score:  $totalScore',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 30.0,
@@ -585,7 +702,7 @@ class _YuviState extends State<Yuvi> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+//    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     return SafeArea(
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -613,10 +730,7 @@ class _YuviState extends State<Yuvi> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
-                          Text(
-                              showTimer,
-                            style: TextStyle(fontSize: 25.0),
-                          ),
+                          sh(),
                           sco(),
 //                          submit(),
 //                          getScore(),
