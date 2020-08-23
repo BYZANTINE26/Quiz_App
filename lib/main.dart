@@ -1,14 +1,7 @@
-import 'dart:async';
-
-import 'package:demoquiz/data.dart';
-import 'package:demoquiz/home.dart';
-import 'package:demoquiz/poll.dart';
-import 'package:demoquiz/rear.dart';
+import 'package:demoquiz/pages/home.dart';
 import 'package:demoquiz/timer.dart';
-import 'package:demoquiz/youtube.dart';
 import 'package:flutter/material.dart';
-import 'package:demoquiz/data.dart';
-import 'shot.dart';
+import 'ongoing.dart';
 
 void main() {
   runApp(MyApp());
@@ -26,7 +19,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'DemoQuiz',
       theme: ThemeData.dark(),
-      home: Yuvi(),
+      home: OnGoing(),
     );
   }
 }
