@@ -84,12 +84,12 @@ class _HomePageState extends State<HomePage> {
           if (widget.quiz){
             Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => Quizing(emailId: _email.text, userName: _name.text, total: questions, music: true, documentId: widget.documentId,)),
+                MaterialPageRoute(builder: (context) => Quizing(emailId: _email.text, userName: _name.text, music: true, documentId: widget.documentId,)),
                     (route) => false);
           } else {
             Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => Polling(emailId: _email.text, userName: _name.text, total: questions, music: true)),
+                MaterialPageRoute(builder: (context) => Polling(emailId: _email.text, userName: _name.text, music: true, documentId: widget.documentId,)),
                     (route) => false);
           }
         });
@@ -104,12 +104,12 @@ class _HomePageState extends State<HomePage> {
           if (widget.quiz){
             Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => Quizing(emailId: _email.text, userName: _name.text, total: questions, music: false, documentId: widget.documentId,)),
+                MaterialPageRoute(builder: (context) => Quizing(emailId: _email.text, userName: _name.text, music: false, documentId: widget.documentId,)),
                     (route) => false);
           } else {
             Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => Polling(emailId: _email.text, userName: _name.text, total: questions, music: false)),
+                MaterialPageRoute(builder: (context) => Polling(emailId: _email.text, userName: _name.text, music: false, documentId: widget.documentId,)),
                     (route) => false);
           }
         });

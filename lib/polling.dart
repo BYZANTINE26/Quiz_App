@@ -16,13 +16,11 @@ class Polling extends StatefulWidget {
   final bool music;
   final String emailId;
   final String userName;
-  final int total;
   final String documentId;
 
   Polling(
       {@required this.emailId,
       @required this.userName,
-      @required this.total,
       @required this.music,
       @required this.documentId});
   @override
@@ -43,9 +41,15 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
     pol = await Firestore.instance.collection('Polls').document(widget.documentId).collection('Polls').getDocuments();
   }
 
-  QuerySnapshot documents;
+  QuerySnapshot questionDocuments;
   void getDocuments()async{
-    documents = await Firestore.instance.collection('Polls').document(widget.documentId).collection('Questions').getDocuments();
+    await Firestore.instance.collection('Polls').document(widget.documentId).collection('Questions').getDocuments().then((value) {
+      setState(() {
+        questionDocuments = value;
+        totalQuestions = questionDocuments.documents.length;
+        Future.delayed(Duration(seconds: 1), () => (currentIndex == 0 && questionDocuments.documents[0].data['video'] != null) ? checkVideo() : print('NO VIDEO'));
+      });
+    });
   }
 
   void play()async{
@@ -54,7 +58,6 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
 
   @override
   void initState() {
-    print('yuvraj');
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -63,9 +66,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
 //    pollingIndexes = widget.indexes;
     currentIndex = 0;
     pollIndex = 0;
-    totalQuestions = widget.total;
     video = false;
-    getDocuments();
 //    getImage();
 //    getVideo();
 //    getType();
@@ -76,7 +77,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
 //    print(_player.state);
     status = widget.music;
     super.initState();
-    Future.delayed(Duration(seconds: 1), () => (currentIndex == 0 && documents.documents[0].data['video'] != null) ? checkVideo() : print('NO VIDEO'));
+    getDocuments();
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -131,16 +132,18 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
     print(option_2);
     print(option_3);
     print(option_4);
+    int count = currentIndex + 1;
     await Firestore.instance.collection('Polls').document(widget.documentId)
         .collection("Polls")
-        .document('poll_value_$currentIndex')
+        .document('poll_value_$count')
         .updateData({'option_$which': FieldValue.increment(1)});
   }
 
   void updateLongPoll(String which) async {
+    int count = currentIndex + 1;
     await Firestore.instance.collection('Polls').document(widget.documentId)
         .collection("LongPolls")
-        .document('poll_value_$currentIndex')
+        .document('poll_value_$count')
         .updateData({'option_$which': FieldValue.increment(1)});
   }
 
@@ -190,21 +193,21 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
   }
 
   ima() {
-    if (documents.documents[currentIndex].data['image'] != 'Poll') {
+    if (questionDocuments.documents[currentIndex].data['image'] == null) {
       return Container();
     } else {
       return Container(
         child: GestureDetector(
           onTap: () {
             setState(() async {
-              if (documents.documents[currentIndex].data['video'] != null) {
+              if (questionDocuments.documents[currentIndex].data['video'] != null) {
                 video = true;
                 _player.pause();
                 await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => Youtube(
-                      link: documents.documents[currentIndex].data['video'].toString(),
+                      link: questionDocuments.documents[currentIndex].data['video'].toString(),
                     ),
                   ),
                 );
@@ -223,8 +226,11 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
             });
           },
           child: Image.network(
-            documents.documents[currentIndex].data['image'],
+            questionDocuments.documents[currentIndex].data['image'],
             fit: BoxFit.fill,
+            errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+              return Icon(Icons.error_outline, color: Colors.white,);
+            },
           ),
         ),
       );
@@ -232,7 +238,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
   }
 
   ques() {
-    if (documents.documents[currentIndex].data['question'] != null) {
+    if (questionDocuments.documents[currentIndex].data['question'] != null) {
       return Container(
         child: Padding(
           padding: const EdgeInsets.only(top: 10.0),
@@ -242,7 +248,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
             children: <Widget>[
               Flexible(
                 child: Text(
-                  documents.documents[currentIndex].data['question'],
+                  questionDocuments.documents[currentIndex].data['question'],
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.visible,
                   style: TextStyle(
@@ -268,13 +274,12 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
         usersWhoVoted = {};
         if (currentIndex == (totalQuestions - 1)) {
           video = true;
-//          connectivity();
-//          uploadRank();
-//          timer = 10;
           Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Greetings(name: widget.userName)), (route) => false);
         } else {
           currentIndex++;
-          checkVideo();
+          if (questionDocuments.documents[currentIndex].data['video'] != null){
+            checkVideo();
+          }
         }
       });
     });
@@ -289,7 +294,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
       option_3 = pol.documents[pollIndex].data['option_3'];
       option_4 = pol.documents[pollIndex].data['option_4'];
     });
-    if (documents.documents[currentIndex].data['options'] == null) {
+    if (questionDocuments.documents[currentIndex].data['answers'] == null) {
       return Container();
     } else {
       return Container(
@@ -303,16 +308,16 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
                 TextStyle(fontSize: MediaQuery.of(context).size.height * 0.035),
             children: [
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][0].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][0].toString(),
                   value: option_1.toDouble()),
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][1].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][1].toString(),
                   value: option_2.toDouble()),
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][2].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][2].toString(),
                   value: option_3.toDouble()),
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][3].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][3].toString(),
                   value: option_4.toDouble()),
             ],
             question: Text(
@@ -362,45 +367,60 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
   }
 
   longPoll(){
-    return Container(
-      child: ListView(
-        children: List.generate(documents.documents[currentIndex].data['options'].length, (index) {
-          return GestureDetector(
-            onTap: (){
-              updateLongPoll((index++).toString());
-              setState(() {
-                if(currentIndex == (totalQuestions - 1)){
-                  video = true;
-                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Greetings(name: widget.userName)), (route) => false);
-                } else {
-                  currentIndex++;
-                  if(documents.documents[currentIndex].data['video'] != null){
-                    checkVideo();
+    if (questionDocuments.documents[currentIndex].data['answers'] != null){
+      return Container(
+        child: ListView(
+          children: List.generate(questionDocuments.documents[currentIndex].data['answers'].length, (index) {
+            return GestureDetector(
+              onTap: (){
+                updateLongPoll((index++).toString());
+                setState(() {
+                  if(currentIndex == (totalQuestions - 1)){
+                    video = true;
+                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Greetings(name: widget.userName)), (route) => false);
+                  } else {
+                    currentIndex++;
+                    if(questionDocuments.documents[currentIndex].data['video'] != null){
+                      checkVideo();
+                    }
                   }
-                }
-              });
-            },
-            child: Card(
-              child: Center(
-                child: Text(documents.documents[currentIndex].data['options'][index]),
+                });
+              },
+              child: Card(
+                color: Colors.yellow,
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                      child: Text(
+                        questionDocuments.documents[currentIndex].data['answers'][index],
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 20
+                        ),
+                      ),
+                  ),
+                ),
               ),
-            ),
-          );
-        }),
-      ),
-    );
+            );
+          }),
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 
 
   opt() {
-    if (documents.documents[currentIndex].data['question_type'] == "Poll") {
+    if (questionDocuments.documents[currentIndex].data['question_type'] == "Poll") {
       return Expanded(
         flex: 1,
         child: Center(
           child: poll(),
         ),
       );
-    } else if (documents.documents[currentIndex].data['question_type'] == "LongPoll"){
+    } else if (questionDocuments.documents[currentIndex].data['question_type'] == "LongPoll"){
       return Expanded(
         flex: 1,
         child: Center(
@@ -437,7 +457,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
               context,
               MaterialPageRoute(
                 builder: (context) => Youtube(
-                  link: documents.documents[currentIndex].data['video'].toString(),
+                  link: questionDocuments.documents[currentIndex].data['video'].toString(),
                 ),
               ),
             );
@@ -448,10 +468,48 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
       ..show();
   }
 
+  skip(){
+    return ButtonTheme(
+      minWidth: _width*0.23,
+      height: _height*0.025,
+      child: RaisedButton(
+        padding: EdgeInsets.all(_height*0.01),
+        color: Colors.grey.shade800,
+        splashColor: Colors.blueGrey,
+        highlightColor: Colors.grey.shade600,
+        elevation: 10.0,
+        onPressed: () {
+          setState(() {
+            if(currentIndex == (totalQuestions - 1)){
+              video = true;
+              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => Greetings(name: widget.userName)), (route) => false);
+            } else {
+              (questionDocuments.documents[currentIndex].data['question_type'] == 'Poll')?pollIndex++:null;
+              currentIndex++;
+              if(questionDocuments.documents[currentIndex].data['video'] != null){
+                checkVideo();
+              }
+            }
+          });
+        },
+        child: Text(
+          'SKIP',
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: _height*0.03,
+              fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+
+  double _width;
   double _height;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   @override
   Widget build(BuildContext context) {
+    _width = MediaQuery.of(context).size.width;
     _height = MediaQuery.of(context).size.height;
     return SafeArea(
       child: Scaffold(
@@ -460,7 +518,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
         appBar: AppBar(
           title: Text("Quiz"),
         ),
-        body: Container(
+        body: (questionDocuments != null)?Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
                 begin: Alignment.topRight,
@@ -475,7 +533,7 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
                   Container(
                     padding: EdgeInsets.symmetric(vertical: _height*0.01),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: <Widget>[
                         musicToggle(),
                       ],
@@ -496,12 +554,17 @@ class _PollingState extends State<Polling> with WidgetsBindingObserver{
                   ),
                   Expanded(
                     flex: 2,
-                    child: Container(),
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: skip(),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+        ):Container(
+          child: LinearProgressIndicator(),
         ),
       ),
     );
