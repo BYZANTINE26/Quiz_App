@@ -23,9 +23,8 @@ class Quizing extends StatefulWidget {
   final bool music;
   final String emailId;
   final String userName;
-  final int total;
 
-  Quizing({@required this.documentId, @required this.emailId, @required this.userName, @required this.total, @required this.music});
+  Quizing({@required this.documentId, @required this.emailId, @required this.userName, @required this.music});
 
   @override
   _QuizingState createState() => _QuizingState();
@@ -37,9 +36,13 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   int outOf = 0;
   int totalQuestions;
 
-  QuerySnapshot documents;
+  QuerySnapshot questionDocuments;
   void getDocuments()async{
-    documents = await Firestore.instance.collection('Quizes').document(widget.documentId).collection('Questions').getDocuments();
+    await Firestore.instance.collection('Quizes').document(widget.documentId).collection('Questions').getDocuments().then((value) {
+      questionDocuments = value;
+      totalQuestions = questionDocuments.documents.length;
+      Future.delayed(Duration(seconds: 1), () => (currentIndex == 0 && questionDocuments.documents[0].data['video'] != null) ? checkVideo() : print('NO VIDEO'));
+    });
   }
 
   int option_1;
@@ -65,12 +68,10 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
       DeviceOrientation.portraitDown,
     ]);
     Wakelock.enable();
-    getDocuments();
     start = DateTime.now();
     currentIndex = 0;
     pollIndex = 0;
     timer = 10;
-    totalQuestions = widget.total;
     video = false;
     startTimer();
 //    getImage();
@@ -85,7 +86,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
     print(_player.state);
     status = widget.music;
     super.initState();
-    Future.delayed(Duration(seconds: 1), () => (currentIndex == 0 && documents.documents[0].data['video'] != null) ? checkVideo() : print('NO VIDEO'));
+    getDocuments();
     WidgetsBinding.instance.addObserver(this);
   }
   
@@ -137,16 +138,18 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   void updatePoll(String which) async {
+    int count = currentIndex + 1;
     await Firestore.instance.collection('Quizes').document(widget.documentId)
         .collection("Polls")
-        .document('poll_value_$currentIndex')
+        .document('poll_value_$count')
         .updateData({'option_$which': FieldValue.increment(1)});
   }
 
   void updateLongPoll(String which) async {
+    int count = currentIndex + 1;
     await Firestore.instance.collection('Quizes').document(widget.documentId)
         .collection("Long_Polls")
-        .document('poll_value_$currentIndex')
+        .document('poll_value_$count')
         .updateData({'option_$which': FieldValue.increment(1)});
   }
 
@@ -232,14 +235,14 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   ima() {
-    if (documents.documents[currentIndex].data['image'] == null) {
+    if (questionDocuments.documents[currentIndex].data['image'] == null) {
       return Container();
     } else {
       return Container(
         child: GestureDetector(
           onTap: () {
             setState(() async{
-              if (documents.documents[currentIndex].data['video'] != null){
+              if (questionDocuments.documents[currentIndex].data['video'] != null){
                 pauseTimer = true;
                 video = true;
                 _player.pause();
@@ -247,7 +250,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
                   context,
                   MaterialPageRoute(
                     builder: (context) => Youtube(
-                      link: documents.documents[currentIndex].data['video'].toString(),
+                      link: questionDocuments.documents[currentIndex].data['video'].toString(),
                     ),
                   ),
                 );
@@ -261,8 +264,11 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
             });
           },
           child: Image.network(
-            documents.documents[currentIndex].data['image'],
+            questionDocuments.documents[currentIndex].data['image'],
             fit: BoxFit.fill,
+            errorBuilder: (BuildContext context, Object exception, StackTrace stackTrace) {
+              return Icon(Icons.error_outline, color: Colors.white,);
+            },
           ),
         ),
       );
@@ -270,7 +276,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   ques() {
-    if (documents.documents[currentIndex].data['question'] == null) {
+    if (questionDocuments.documents[currentIndex].data['question'] == null) {
       return Container();
     } else {
       return Container(
@@ -282,7 +288,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
             children: <Widget>[
               Flexible(
                 child: Text(
-                  documents.documents[currentIndex].data['question'],
+                  questionDocuments.documents[currentIndex].data['question'],
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.visible,
                   style: TextStyle(
@@ -322,7 +328,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
               currentIndex++;
               re();
               cancelTimer = true;
-              if(documents.documents[currentIndex].data['video'] != null){
+              if(questionDocuments.documents[currentIndex].data['video'] != null){
                 checkVideo();
               } else {
                 setState(() {
@@ -367,7 +373,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
                 currentIndex++;
                 re();
                 cancelTimer = true;
-                if(documents.documents[currentIndex].data['video'] != null){
+                if(questionDocuments.documents[currentIndex].data['video'] != null){
                   checkVideo();
                 } else {
                   setState(() {
@@ -412,7 +418,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
                 currentIndex++;
                 re();
                 cancelTimer = true;
-                if(documents.documents[currentIndex].data['video'] != null){
+                if(questionDocuments.documents[currentIndex].data['video'] != null){
                   checkVideo();
                 } else {
                   setState(() {
@@ -436,9 +442,9 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
 
   checkAnswer(dynamic userPicked) {
     pauseTimer = true;
-    outOf += documents.documents[currentIndex].data['score'];
-    if ((userPicked == documents.documents[currentIndex].data['correct_answer']) || (userPicked.toString() == documents.documents[currentIndex].data['correct_answer'].toString())) {
-      totalScore += documents.documents[currentIndex].data['score'];
+    outOf += questionDocuments.documents[currentIndex].data['score'];
+    if ((userPicked == questionDocuments.documents[currentIndex].data['correct_answer']) || (userPicked.toString() == questionDocuments.documents[currentIndex].data['correct_answer'].toString())) {
+      totalScore += questionDocuments.documents[currentIndex].data['score'];
       ans = true;
       return dialog();
     } else {
@@ -505,7 +511,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   mcq() {
-    if (documents.documents[currentIndex].data['options'] != null) {
+    if (questionDocuments.documents[currentIndex].data['answers'] != null) {
       return Container(
         child: GridView.count(
           crossAxisCount: 2,
@@ -513,12 +519,12 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
           crossAxisSpacing: 15.0,
           mainAxisSpacing: 15.0,
           childAspectRatio: 2,
-          children: List.generate(documents.documents[currentIndex].data['options'].length, (index){
+          children: List.generate(questionDocuments.documents[currentIndex].data['answers'].length, (index){
             return Container(
               height: MediaQuery.of(context).size.height*0.075,
               width: MediaQuery.of(context).size.width*0.425,
               child: McqOptions(
-                documents.documents[currentIndex].data['options'],
+                questionDocuments.documents[currentIndex].data['answers'],
                 index,
                 Key('$index'),
                 onChoice: (choice){
@@ -536,11 +542,11 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
 
   dynamic rearrange;
   rear() {
-    if (documents.documents[currentIndex].data['options'] == null) {
+    if (questionDocuments.documents[currentIndex].data['answers'] == null) {
       return Container();
     } else {
       setState(() {
-        rearrange = documents.documents[currentIndex].data['options'];
+        rearrange = questionDocuments.documents[currentIndex].data['answers'];
       });
       return Container(
         child: Center(
@@ -565,39 +571,54 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   longPoll(){
-    return Container(
-      child: ListView(
-        children: List.generate(documents.documents[currentIndex].data['options'].length, (index) {
-          return GestureDetector(
-            onTap: (){
-              updateLongPoll((index++).toString());
-              setState(() {
-                re();
-                cancelTimer = true;
-                if(currentIndex == (totalQuestions - 1)){
-                  pauseTimer = true;
-                  end = DateTime.now();
-                  time = end.difference(start).inSeconds;
-                  connectivity();
-                } else {
-                  currentIndex++;
-                  if(documents.documents[currentIndex].data['video'] != null){
-                    checkVideo();
-                  }
+    if (questionDocuments.documents[currentIndex].data['answers'] != null){
+      return Container(
+        child: ListView(
+          children: List.generate(questionDocuments.documents[currentIndex].data['answers'].length, (index) {
+            return GestureDetector(
+              onTap: (){
+                updateLongPoll((index+1).toString());
+                setState(() {
                   re();
                   cancelTimer = true;
-                }
-              });
-            },
-            child: Card(
-              child: Center(
-                child: Text(documents.documents[currentIndex].data['options'][index]),
+                  if(currentIndex == (totalQuestions - 1)){
+                    pauseTimer = true;
+                    end = DateTime.now();
+                    time = end.difference(start).inSeconds;
+                    connectivity();
+                  } else {
+                    currentIndex++;
+                    if(questionDocuments.documents[currentIndex].data['answers'] != null){
+                      checkVideo();
+                    }
+                    re();
+                    cancelTimer = true;
+                  }
+                });
+              },
+              child: Card(
+                color: Colors.yellow,
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
+                    child: Text(
+                      questionDocuments.documents[currentIndex].data['answers'][index],
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 20
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          );
-        }),
-      ),
-    );
+            );
+          }),
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 
   delay() {
@@ -614,7 +635,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
           connectivity();
         } else {
           currentIndex++;
-          if(documents.documents[currentIndex].data['video'] != null){
+          if(questionDocuments.documents[currentIndex].data['video'] != null){
             checkVideo();
           }
           re();
@@ -635,7 +656,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
       option_3 = polls.documents[pollIndex].data['option_3'];
       option_4 = polls.documents[pollIndex].data['option_4'];
     });
-    if (documents.documents[currentIndex].data['options'] == null) {
+    if (questionDocuments.documents[currentIndex].data['answers'] == null) {
       return Container();
     } else {
       return Container(
@@ -647,16 +668,16 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
             leadingPollStyle: TextStyle(fontSize: MediaQuery.of(context).size.height*0.035),
             children: [
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][0].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][0].toString(),
                   value: option_1.toDouble()),
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][1].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][1].toString(),
                   value: option_2.toDouble()),
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][2].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][2].toString(),
                   value: option_3.toDouble()),
               Polls.options(
-                  title: documents.documents[currentIndex].data['options'][3].toString(),
+                  title: questionDocuments.documents[currentIndex].data['answers'][3].toString(),
                   value: option_4.toDouble()),
             ],
             question: Text(
@@ -706,28 +727,28 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   opt() {
-    if (documents.documents[currentIndex].data['question_type'] == "True/False") {
+    if (questionDocuments.documents[currentIndex].data['question_type'] == "True/False") {
       return Expanded(
         flex: 1,
         child: Center(
           child: trueFalse(),
         ),
       );
-    } else if (documents.documents[currentIndex].data['question_type'] == "MCQ") {
+    } else if (questionDocuments.documents[currentIndex].data['question_type'] == "MCQ") {
       return Expanded(
         flex: 1,
         child: Center(
           child: mcq(),
         ),
       );
-    } else if (documents.documents[currentIndex].data['question_type'] == "Re-arrange") {
+    } else if (questionDocuments.documents[currentIndex].data['question_type'] == "Re-arrange") {
       return Expanded(
         flex: 1,
         child: Center(
           child: rear(),
         ),
       );
-    } else if (documents.documents[currentIndex].data['question_type'] == "Poll") {
+    } else if (questionDocuments.documents[currentIndex].data['question_type'] == "Poll") {
       return Expanded(
         flex: 1,
         child: Center(
@@ -737,7 +758,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
           ),
         ),
       );
-    } else if (documents.documents[currentIndex].data['question_type'] == "LongPoll"){
+    } else if (questionDocuments.documents[currentIndex].data['question_type'] == "LongPoll"){
       return Expanded(
         flex: 1,
         child: Center(
@@ -777,7 +798,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
                 context,
                 MaterialPageRoute(
                   builder: (context) => Youtube(
-                    link: documents.documents[currentIndex].data['video'].toString(),
+                    link: questionDocuments.documents[currentIndex].data['video'].toString(),
                   ),
                 ),
               );
@@ -793,7 +814,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   submit() {
-    if (documents.documents[currentIndex].data['options'] == "Re-arrange") {
+    if (questionDocuments.documents[currentIndex].data['options'] == "Re-arrange") {
       return ButtonTheme(
         minWidth: _width*0.23,
         height: _height*0.025,
@@ -835,18 +856,19 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
         onPressed: () {
           setState(() {
             pauseTimer = true;
-            outOf += documents.documents[currentIndex].data['score'];
+            (questionDocuments.documents[currentIndex].data['question_type'] == 'Poll' || questionDocuments.documents[currentIndex].data['question_type'] == 'LongPoll')?null:outOf += questionDocuments.documents[currentIndex].data['score'];
             if(currentIndex == (totalQuestions - 1)){
               pauseTimer = true;
               end = DateTime.now();
               time = end.difference(start).inSeconds;
               connectivity();
             } else {
+              (questionDocuments.documents[currentIndex].data['question_type'] == 'Poll')?pollIndex++:null;
               currentIndex++;
 //              pauseTimer = false;
               re();
               cancelTimer = true;
-              if(documents.documents[currentIndex].data['video'] != null){
+              if(questionDocuments.documents[currentIndex].data['video'] != null){
                 checkVideo();
               } else {
                 setState(() {
@@ -876,7 +898,7 @@ class _QuizingState extends State<Quizing> with WidgetsBindingObserver{
   }
 
   sh() {
-    if ((documents.documents[currentIndex].data['question_type'] == "Poll") || documents.documents[currentIndex].data['question_type'] == "LongPoll") {
+    if ((questionDocuments.documents[currentIndex].data['question_type'] == "Poll") || questionDocuments.documents[currentIndex].data['question_type'] == "LongPoll") {
       return Container();
     } else {
       return Container(

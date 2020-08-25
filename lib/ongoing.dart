@@ -13,10 +13,15 @@ class _OnGoingState extends State<OnGoing> {
   getStream()async{
     int now = DateTime.now().millisecondsSinceEpoch;
     setState(() async{
-      quizstream = await Firestore.instance.collection('Quizes').where("start_time", isLessThan: now).where("end_time", isGreaterThan: now).getDocuments();
-      print('not waiting');
-      print(quizstream);
-      pollstream = await Firestore.instance.collection('Polls').where("start_time", isLessThan: now).where("end_time", isGreaterThan: now).getDocuments();
+      quizstream = await Firestore.instance.collection('Quizes').where("start_time", isLessThan: now).getDocuments().then((value) {
+        value.documents.removeWhere((element) => element.data['end_time'] < now);
+        return value;
+      });
+      print(quizstream.documents.first.data);
+      pollstream = await Firestore.instance.collection('Polls').where("start_time", isLessThan: now).getDocuments().then((value) {
+        value.documents.removeWhere((element) => element.data['end_time'] < now);
+        return value;
+      });
     });
   }
 
@@ -92,15 +97,17 @@ class _OnGoingState extends State<OnGoing> {
       return new DataRow(
           onSelectChanged: (selected){
             if(selected){
-              Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(quiz: quiz, documentId: pollstream.documents[index].documentID,)));
+              print(quiz);
+              print(quizstream.documents[index].documentID);
+              Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(quiz: quiz, documentId: quizstream.documents[index].documentID,)));
             } else {
               print('not selected');
             }
           },
           cells: [
             DataCell(Text(quizstream.documents[index].documentID)),
-            DataCell(Text(quizstream.documents[index].data['start_time'].toString())),
-            DataCell(Text(quizstream.documents[index].data['end_time'].toString())),
+            DataCell(Text(DateTime.fromMillisecondsSinceEpoch(quizstream.documents[index].data['start_time']).toLocal().toString().split(' ')[0])),
+            DataCell(Text(DateTime.fromMillisecondsSinceEpoch(quizstream.documents[index].data['end_time']).toLocal().toString().split(' ')[0])),
           ]);
     });
     return newList;
@@ -139,6 +146,8 @@ class _OnGoingState extends State<OnGoing> {
       return new DataRow(
           onSelectChanged: (selected){
             if(selected){
+              print(quiz);
+              print(pollstream.documents[index].documentID);
               Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage(quiz: quiz, documentId: pollstream.documents[index].documentID,)));
             } else {
               print('not selected');
@@ -146,8 +155,8 @@ class _OnGoingState extends State<OnGoing> {
           },
           cells: [
             DataCell(Text(pollstream.documents[index].documentID)),
-            DataCell(Text(pollstream.documents[index].data['start_time'].toString())),
-            DataCell(Text(pollstream.documents[index].data['end_time'].toString())),
+            DataCell(Text(DateTime.fromMillisecondsSinceEpoch(pollstream.documents[index].data['start_time']).toLocal().toString().split(' ')[0])),
+            DataCell(Text(DateTime.fromMillisecondsSinceEpoch(pollstream.documents[index].data['end_time']).toLocal().toString().split(' ')[0])),
           ]);
     });
     return newList;

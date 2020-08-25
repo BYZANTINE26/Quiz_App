@@ -39,7 +39,7 @@ class _YoutubeState extends State<Youtube> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
-    _ids.add(widget.link);
+    _ids.add(YoutubePlayer.convertUrlToId(widget.link));
     super.initState();
     _controller = YoutubePlayerController(
       initialVideoId: _ids.first,
